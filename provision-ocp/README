@@ -1,0 +1,22 @@
+how to run
+ansible -i /Users/rfoe/workspace/playbook/setup/provision-ocp/inventory/local  all -m ping
+
+
+
+
+ansible -i /Users/rfoe/workspace/playbook/setup/provision-ocp/inventory/local/hosts ,  \
+-i /Users/rfoe/workspace/playbook/setup/provision-ocp/inventory/group_var/variables , \
+-i /Users/rfoe/workspace/playbook/setup/provision-ocp/inventory/roles \
+/Users/rfoe/workspace/playbook/setup/provision-ocp/local-3.7/provision_ocp.yaml
+
+
+
+
+ansible-playbook -i /Users/rfoe/workspace/playbook/setup/provision-ocp/inventory/local/hosts ,  \
+-i /Users/rfoe/workspace/playbook/setup/provision-ocp/inventory/group_var/variables , \
+-i /Users/rfoe/workspace/playbook/setup/provision-ocp/inventory/roles \
+/Users/rfoe/workspace/playbook/setup/provision-ocp/local-3.7/provision.yml
+
+
+
+

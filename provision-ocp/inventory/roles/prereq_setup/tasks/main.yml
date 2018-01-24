@@ -1,0 +1,87 @@
+---
+- name: Subscribe to Red Hat
+  redhat_subscription:
+      state: present
+      username: "{{ subs_username }}"
+      password: "{{ subs_password }}"
+      pool_ids: "{{ subs_pool_id }}"
+
+
+- name: Disable all repo
+  command: subscription-manager repos --disable=\*
+
+- name: Add required repo
+  command: subscription-manager repos --enable="rhel-7-server-rpms" --enable="rhel-7-server-extras-rpms" --enable="rhel-7-server-ose-3.7-rpms" --enable="rhel-7-fast-datapath-rpms"
+
+- name: Install required packages
+  yum: name={{ item }} state=present
+  with_items:
+    - wget
+    - git
+    - net-tools
+    - bind-utils
+    - iptables-services
+    - bridge-utils
+    - bash-completion
+    - sshpass
+
+- name: Disable firewall
+  command: "{{ item }}"
+  with_items:
+    - service firewalld stop
+    - systemctl disable firewalld
+
+- name: Define Hosts
+  shell: "{{ item }}"
+  with_items:
+    - echo "## - OSE - " >> /etc/hosts
+    - echo "192.168.59.101 ocp-master ocp-master.mycloud ocp-master.myapp.mycloud" >> /etc/hosts
+    - echo "options single-request-reopen" >> /etc/hosts
+
+- name: Perform yum update
+  yum:
+    name: '*'
+    state: latest
+
+- name: Install Docker
+  yum:
+    name: docker
+    state: present
+
+- name: Make sure Docker is running
+  systemd: state=started name=docker enabled=yes
+
+- name: Add Docker options
+  shell: sed -i '/OPTIONS=.*/c\OPTIONS="--selinux-enabled --insecure-registry 172.30.0.0/16"' /etc/sysconfig/docker
+
+- name: Generate SSH Key
+  shell: echo -e "\n\n\n" | ssh-keygen -t rsa -P ""
+
+- name: Assign SSH Key
+  command: sshpass -p "vagrant" ssh-copy-id -i ~/.ssh/id_rsa.pub -o StrictHostKeyChecking=no {{ master_private_dns_name }}
+
+- name: Install OpenShift utils
+  yum:
+    name: atomic-openshift-utils
+    state: present
+
+- name: Copy OpenShift install config
+  template: src=ocpconfig.j2 dest=/etc/ansible/hosts
+  tags:
+    - installation
+
+
+#- name: Install OpenShift
+#  command: ansible-playbook /usr/share/ansible/openshift-ansible/playbooks/byo/config.yml
+  #when: inventory_hostname == master_host
+#  tags:
+#    - installation
+
+#- name: Configure default username and password
+#  command: htpasswd -b /etc/origin/openshift-passwd demo demo
+  #when: inventory_hostname == master_host
+#  tags:
+#    - installation
+
+
+

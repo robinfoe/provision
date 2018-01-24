@@ -1,0 +1,56 @@
+# Create an OSEv3 group that contains the master, nodes, etcd, and lb groups.
+[OSEv3:children]
+masters
+etcd
+nodes
+
+
+# Set variables common for all OSEv3 hosts
+[OSEv3:vars]
+# SSH user, this user should allow ssh based auth without requiring a password
+ansible_ssh_user=root
+ansible_sudo=true
+deployment_type=openshift-enterprise
+debug_level=4
+
+
+openshift_master_identity_providers=[{'name': 'htpasswd_auth', 'login': 'true', 'challenge': 'true', 'kind': 'HTPasswdPasswordIdentityProvider', 'filename': '/etc/origin/openshift-passwd'}]
+osm_default_node_selector='env=dev'
+
+openshift_hosted_metrics_deploy=false
+openshift_disable_check=disk_availability,docker_storage,memory_availability
+
+
+# default subdomain to use for exposed routes
+openshift_master_default_subdomain={{ domain }}
+osm_default_subdomain={{ domain }}
+
+
+# default project node selector
+osm_default_node_selector='env=dev'
+
+# Router selector (optional)
+openshift_hosted_router_selector='env=dev'
+openshift_hosted_router_replicas=1
+
+# Registry selector (optional)
+openshift_registry_selector='env=dev'
+
+# Configure metricsPublicURL in the master config for cluster metrics
+openshift_master_metrics_public_url=https://hawkular-metrics.{{ domain }}
+
+# Configure loggingPublicURL in the master config for aggregate logging
+openshift_master_logging_public_url=https://kibana.{{ domain }}
+
+# host group for masters
+[masters]
+{{ master_private_dns_name }} openshift_ip={{ domain_ip }} openshift_hostname={{ master_private_dns_name }} openshift_public_hostname={{ master_private_dns_name }} openshift_public_ip={{ domain_ip }}
+
+# host group for etcd
+[etcd]
+{{ master_private_dns_name }} openshift_ip={{ domain_ip }} openshift_hostname={{ master_private_dns_name }} openshift_public_hostname={{ master_private_dns_name }} openshift_public_ip={{ domain_ip }}
+
+# host group for nodes, includes region info
+[nodes]
+{{ master_private_dns_name }}  openshift_schedulable=true openshift_node_labels="{'name': 'master','region': 'infra', 'zone': 'default', 'env': 'dev'}" openshift_ip={{ domain_ip }} openshift_hostname={{ master_private_dns_name }} openshift_public_hostname={{ master_private_dns_name }}openshift_public_ip={{ domain_ip }}
+

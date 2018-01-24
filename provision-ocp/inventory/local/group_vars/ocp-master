@@ -1,0 +1,7 @@
+subs_username: <Username>
+subs_password: <password>
+subs_pool_id: <poolid>
+domain: myapp.mycloud
+master_private_dns_name:  ocp-master.mycloud
+master_host: ocp-master
+domain_ip: 192.168.59.101

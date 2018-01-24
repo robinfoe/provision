@@ -1,0 +1,7 @@
+---
+- hosts: ocp-master
+  remote_user: root
+  become: yes
+
+  roles:
+    - prereq_setup
